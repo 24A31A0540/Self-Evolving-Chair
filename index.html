@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>The Self-Evolving Chair | Decentralized Product Design System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        body.light-mode {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 100%);
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 15px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .dark-mode .navbar {
+            background: rgba(26, 43, 58, 0.98);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            border-radius: 10px;
+            color: #2c3e50;
+        }
+
+        .dark-mode .nav-btn {
+            color: #e0e0e0;
+        }
+
+        .nav-btn:hover {
+            background: rgba(0, 180, 219, 0.1);
+            color: #00b4db;
+        }
+
+        .theme-toggle {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg);
+        }
+
+        /* Main Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .dark-mode .card {
+            background: rgba(26, 43, 58, 0.95);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #2c3e50;
+        }
+
+        .dark-mode .card-title {
+            color: #e0e0e0;
+        }
+
+        /* Design Studio */
+        .design-studio {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .preview-canvas {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .dark-mode .preview-canvas {
+            background: linear-gradient(135deg, #1e2a3a 0%, #0f1724 100%);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .dark-mode .control-group label {
+            color: #e0e0e0;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .dark-mode input, .dark-mode select, .dark-mode textarea {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00b4db;
+            box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.1);
+        }
+
+        button {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 180, 219, 0.3);
+        }
+
+        /* Voting Cards */
+        .design-card {
+            background: rgba(248, 250, 252, 0.9);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #00b4db;
+        }
+
+        .dark-mode .design-card {
+            background: rgba(45, 55, 72, 0.9);
+            border-left-color: #00b4db;
+        }
+
+        .design-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .vote-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .vote-btn {
+            padding: 5px 15px;
+            font-size: 14px;
+        }
+
+        .vote-btn:first-child {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+        }
+
+        .vote-btn:last-child {
+            background: linear-gradient(135deg, #eb3349, #f45c43);
+        }
+
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+            border-left: 2px solid #00b4db;
+            padding-left: 20px;
+            margin-left: 10px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #00b4db;
+            box-shadow: 0 0 0 3px rgba(0, 180, 219, 0.2);
+        }
+
+        /* Analytics */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(0, 180, 219, 0.1), rgba(0, 131, 176, 0.05));
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(0, 180, 219, 0.15), rgba(0, 131, 176, 0.1));
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .design-studio {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            animation: slideIn 0.3s;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            font-weight: 500;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .active-tab {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: white !important;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            border-radius: 10px;
+        }
+
+        /* Range input styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            height: 5px;
+            border-radius: 5px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #00b4db;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="logo">
+                🪑 The Self-Evolving Chair
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn" onclick="showTab('dashboard')">📊 Dashboard</button>
+                <button class="nav-btn" onclick="showTab('studio')">🎨 Design Studio</button>
+                <button class="nav-btn" onclick="showTab('voting')">🗳️ Community Voting</button>
+                <button class="nav-btn" onclick="showTab('timeline')">📅 Evolution Timeline</button>
+                <div class="theme-toggle" onclick="toggleTheme()">🌓</div>
+            </div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-title">
+                        <span>📈 Design Evolution Stats</span>
+                    </div>
+                    <canvas id="evolutionChart" style="max-height: 300px;"></canvas>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>🏆 Top Contributors</span>
+                    </div>
+                    <div id="leaderboard"></div>
+                </div>
+                <div class="card">
+                    <div class="card-title">
+                        <span>📊 Design Trends</span>
+                    </div>
+                    <div class="stat-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalDesigns">0</div>
+                            <div>Total Designs</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="activeVoters">0</div>
+                            <div>Active Voters</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avgErgonomics">0</div>
+                            <div>Avg Ergonomics</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="sustainabilityScore">0</div>
+                            <div>Sustainability</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Design Studio Tab -->
+        <div id="studio" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>🎨 Create Your Chair Design</span>
+                    <button onclick="submitDesign()">✨ Submit Design</button>
+                </div>
+                <div class="design-studio">
+                    <div>
+                        <canvas id="chairCanvas" class="preview-canvas" width="400" height="400"></canvas>
+                        <button onclick="generateAIVariation()">🤖 AI Generate Variation</button>
+                    </div>
+                    <div>
+                        <div class="control-group">
+                            <label>Chair Name</label>
+                            <input type="text" id="designName" placeholder="My Awesome Chair">
+                        </div>
+                        <div class="control-group">
+                            <label>Chair Type</label>
+                            <select id="chairType" onchange="updatePreview()">
+                                <option value="office">Office Chair</option>
+                                <option value="gaming">Gaming Chair</option>
+                                <option value="lounge">Lounge Chair</option>
+                                <option value="dining">Dining Chair</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Material</label>
+                            <select id="material" onchange="updatePreview()">
+                                <option value="wood">Wood</option>
+                                <option value="metal">Metal</option>
+                                <option value="plastic">Plastic</option>
+                                <option value="carbon fiber">Carbon Fiber</option>
+                                <option value="recycled materials">Recycled Materials</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Color</label>
+                            <input type="color" id="color" value="#00b4db" onchange="updatePreview()">
+                        </div>
+                        <div class="control-group">
+                            <label>Height (cm): <span id="heightVal">90</span></label>
+                            <input type="range" id="height" min="70" max="120" value="90" oninput="updatePreview()">
+                        </div>
+                        <div class="control-group">
+                            <label>Lumbar Support (1-10): <span id="lumbarVal">7</span></label>
+                            <input type="range" id="lumbar" min="1" max="10" value="7" oninput="updatePreview()">
+                        </div>
+                        <div class="control-group">
+                            <label>Recycled Content (%): <span id="recycledVal">0</span></label>
+                            <input type="range" id="recycled" min="0" max="100" value="0" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Voting Tab -->
+        <div id="voting" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>🗳️ Vote for Your Favorite Designs</span>
+                    <span>🏅 Your Reputation: <span id="userReputation">100</span></span>
+                </div>
+                <div id="designsList"></div>
+            </div>
+        </div>
+
+        <!-- Timeline Tab -->
+        <div id="timeline" class="tab-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>📅 Evolution Timeline</span>
+                    <button onclick="exportDesigns()">📥 Export All Designs</button>
+                </div>
+                <div id="timelineContent" class="timeline"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let designs = [];
+        let currentUser = {
+            id: 'user_' + Math.random().toString(36).substr(2, 9),
+            name: 'Designer_' + Math.floor(Math.random() * 1000),
+            reputation: 100,
+            votes: []
+        };
+        let chart = null;
+        let evolutionInterval = null;
+
+        // Initialize Socket.io for real-time updates
+        const socket = io('https://socket.io', { autoConnect: false });
+        
+        // Simulate real-time updates
+        function setupRealTimeUpdates() {
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    showToast('🔔 New design submitted by another user!');
+                    loadDesigns();
+                }
+            }, 30000);
+        }
+
+        // Show toast notification
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            // Update active button styling
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active-tab');
+            });
+            event.target.classList.add('active-tab');
+            
+            if (tabName === 'dashboard') updateDashboard();
+            if (tabName === 'voting') loadDesigns();
+            if (tabName === 'timeline') updateTimeline();
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateChart(); // Refresh chart colors
+        }
+
+        // Load saved theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Draw chair preview
+        function updatePreview() {
+            const canvas = document.getElementById('chairCanvas');
+            const ctx = canvas.getContext('2d');
+            const color = document.getElementById('color').value;
+            const height = parseInt(document.getElementById('height').value);
+            const lumbar = parseInt(document.getElementById('lumbar').value);
+            const material = document.getElementById('material').value;
+            
+            document.getElementById('heightVal').textContent = height;
+            document.getElementById('lumbarVal').textContent = lumbar;
+            document.getElementById('recycledVal').textContent = document.getElementById('recycled').value;
+            
+            ctx.clearRect(0, 0, 400, 400);
+            
+            // Draw gradient background
+            const gradient = ctx.createLinearGradient(0, 0, 400, 400);
+            gradient.addColorStop(0, '#f5f7fa');
+            gradient.addColorStop(1, '#c3cfe2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 400, 400);
+            
+            // Draw chair based on parameters
+            const seatHeight = 200;
+            const backHeight = height * 2;
+            
+            // Shadow effect
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            
+            // Seat
+            ctx.fillStyle = color;
+            ctx.fillRect(100, 300, 200, 80);
+            
+            // Back
+            ctx.fillRect(100, 300 - backHeight, 200, backHeight);
+            
+            // Lumbar support indicator
+            const lumbarY = 300 - backHeight + (lumbar / 10 * backHeight);
+            ctx.fillStyle = '#00b4db';
+            ctx.fillRect(100, lumbarY, 200, 20);
+            
+            // Material texture
+            if (material === 'wood') {
+                ctx.strokeStyle = '#654321';
+                for(let i = 0; i < 10; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(100 + i * 20, 300 - backHeight);
+                    ctx.lineTo(100 + i * 20, 300);
+                    ctx.stroke();
+                }
+            } else if (material === 'carbon fiber') {
+                ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                for(let i = 0; i < 20; i++) {
+                    ctx.fillRect(100 + i * 10, 300 - backHeight, 5, backHeight);
+                }
+            }
+            
+            // Armrests
+            ctx.fillStyle = '#999';
+            ctx.fillRect(70, 280, 20, 60);
+            ctx.fillRect(310, 280, 20, 60);
+            
+            ctx.shadowBlur = 0;
+            
+            // Labels
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'bold 12px Inter';
+            ctx.fillText(`Lumbar: ${lumbar}/10`, 120, lumbarY - 5);
+            ctx.fillStyle = '#00b4db';
+            ctx.fillText(`Recycled: ${document.getElementById('recycled').value}%`, 120, 350);
+        }
+
+        // Submit design
+        function submitDesign() {
+            const design = {
+                id: 'design_' + Date.now(),
+                version: designs.length + 1,
+                name: document.getElementById('designName').value || `Chair v${designs.length + 1}`,
+                creator: currentUser.name,
+                creatorId: currentUser.id,
+                timestamp: new Date().toISOString(),
+                parameters: {
+                    chairType: document.getElementById('chairType').value,
+                    material: document.getElementById('material').value,
+                    color: document.getElementById('color').value,
+                    dimensions: {
+                        height: parseInt(document.getElementById('height').value)
+                    },
+                    ergonomics: {
+                        lumbarSupport: parseInt(document.getElementById('lumbar').value)
+                    },
+                    sustainability: {
+                        recycledContent: parseInt(document.getElementById('recycled').value)
+                    }
+                },
+                votes: 0,
+                voters: [],
+                hash: generateHash(),
+                generation: Math.floor(designs.length / 5) + 1
+            };
+            
+            designs.unshift(design);
+            localStorage.setItem('chair_designs', JSON.stringify(designs));
+            
+            // Add to contributor stats
+            updateContributorStats(design.creatorId);
+            
+            showToast('✅ Design submitted successfully! Hash: ' + design.hash.slice(0, 8) + '...');
+            updateDashboard();
+            
+            // AI enhancement suggestion
+            setTimeout(() => {
+                const suggestion = generateAISuggestion(design);
+                showToast(`🤖 AI Suggestion: ${suggestion}`);
+            }, 1000);
+        }
+
+        // Generate unique hash
+        function generateHash() {
+            return '0x' + Math.random().toString(36).substr(2, 64);
+        }
+
+        // AI suggestion generator
+        function generateAISuggestion(design) {
+            const suggestions = [];
+            
+            if (design.parameters.ergonomics.lumbarSupport < 7) {
+                suggestions.push(`Increase lumbar support to 8/10 for better comfort (+30% satisfaction)`);
+            }
+            if (design.parameters.sustainability.recycledContent < 50) {
+                suggestions.push(`Use 50% recycled materials to reduce carbon footprint by 40%`);
+            }
+            if (design.parameters.material === 'plastic') {
+                suggestions.push(`Switch to sustainable bamboo for eco-friendly design`);
+            }
+            
+            return suggestions.length > 0 ? suggestions[0] : 'Perfect design! Consider adding headrest for premium comfort.';
+        }
+
+        // AI generate variation
+        function generateAIVariation() {
+            const materials = ['wood', 'metal', 'carbon fiber', 'recycled materials', 'bamboo'];
+            const colors = ['#00b4db', '#0083b0', '#11998e', '#38ef7d', '#eb3349'];
+            
+            document.getElementById('material').value = materials[Math.floor(Math.random() * materials.length)];
+            document.getElementById('color').value = colors[Math.floor(Math.random() * colors.length)];
+            document.getElementById('lumbar').value = Math.floor(Math.random() * 5) + 6;
+            document.getElementById('recycled').value = Math.floor(Math.random() * 80) + 20;
+            
+            updatePreview();
+            showToast('🤖 AI generated an optimized variation based on trending designs!');
+        }
+
+        // Update contributor stats
+        function updateContributorStats(userId) {
+            let contributors = JSON.parse(localStorage.getItem('contributors') || '{}');
+            contributors[userId] = (contributors[userId] || 0) + 1;
+            localStorage.setItem('contributors', JSON.stringify(contributors));
+        }
+
+        // Load designs from storage
+        function loadDesigns() {
+            const stored = localStorage.getItem('chair_designs');
+            if (stored) {
+                designs = JSON.parse(stored);
+            } else {
+                // Seed initial designs
+                seedInitialDesigns();
+            }
+            
+            renderDesignsForVoting();
+        }
+
+        // Seed initial designs
+        function seedInitialDesigns() {
+            const initialDesigns = [
+                {
+                    id: 'design_1',
+                    version: 1,
+                    name: 'Ergo Pro Classic',
+                    creator: 'DesignMaster',
+                    creatorId: 'user_initial_1',
+                    timestamp: new Date(Date.now() - 7*24*60*60*1000).toISOString(),
+                    parameters: {
+                        chairType: 'office',
+                        material: 'wood',
+                        color: '#8B4513',
+                        dimensions: { height: 90 },
+                        ergonomics: { lumbarSupport: 8 },
+                        sustainability: { recycledContent: 30 }
+                    },
+                    votes: 45,
+                    voters: [],
+                    hash: generateHash(),
+                    generation: 1
+                },
+                {
+                    id: 'design_2',
+                    version: 2,
+                    name: 'Gaming Beast',
+                    creator: 'GamerPro',
+                    creatorId: 'user_initial_2',
+                    timestamp: new Date(Date.now() - 5*24*60*60*1000).toISOString(),
+                    parameters: {
+                        chairType: 'gaming',
+                        material: 'carbon fiber',
+                        color: '#E67E22',
+                        dimensions: { height: 95 },
+                        ergonomics: { lumbarSupport: 9 },
+                        sustainability: { recycledContent: 15 }
+                    },
+                    votes: 32,
+                    voters: [],
+                    hash: generateHash(),
+                    generation: 1
+                },
+                {
+                    id: 'design_3',
+                    version: 3,
+                    name: 'Eco Lounge',
+                    creator: 'GreenDesigner',
+                    creatorId: 'user_initial_3',
+                    timestamp: new Date(Date.now() - 3*24*60*60*1000).toISOString(),
+                    parameters: {
+                        chairType: 'lounge',
+                        material: 'recycled materials',
+                        color: '#2C3E50',
+                        dimensions: { height: 85 },
+                        ergonomics: { lumbarSupport: 7 },
+                        sustainability: { recycledContent: 85 }
+                    },
+                    votes: 67,
+                    voters: [],
+                    hash: generateHash(),
+                    generation: 2
+                }
+            ];
+            designs = initialDesigns;
+            localStorage.setItem('chair_designs', JSON.stringify(designs));
+        }
+
+        // Render designs for voting
+        function renderDesignsForVoting() {
+            const container = document.getElementById('designsList');
+            if (!container) return;
+            
+            const sortedDesigns = [...designs].sort((a, b) => b.votes - a.votes);
+            
+            container.innerHTML = sortedDesigns.map(design => `
+                <div class="design-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>${design.name}</strong> by ${design.creator}
+                            <div style="font-size: 12px; color: #00b4db;">Generation ${design.generation} | Hash: ${design.hash.slice(0, 8)}...</div>
+                        </div>
+                        <div style="font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #00b4db, #0083b0); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">⭐ ${design.votes}</div>
+                    </div>
+                    <div style="margin-top: 10px; font-size: 14px;">
+                        Type: ${design.parameters.chairType} | Material: ${design.parameters.material}
+                        | Lumbar: ${design.parameters.ergonomics.lumbarSupport}/10
+                        | Recycled: ${design.parameters.sustainability.recycledContent}%
+                    </div>
+                    <div class="vote-buttons">
+                        <button class="vote-btn" onclick="voteDesign('${design.id}', 1)">👍 Upvote (+${Math.floor(currentUser.reputation / 20) + 1})</button>
+                        <button class="vote-btn" onclick="voteDesign('${design.id}', -1)">👎 Downvote</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Vote on design
+        function voteDesign(designId, value) {
+            const design = designs.find(d => d.id === designId);
+            if (!design) return;
+            
+            if (design.voters.includes(currentUser.id)) {
+                showToast('⚠️ You have already voted on this design!');
+                return;
+            }
+            
+            const voteWeight = Math.floor(currentUser.reputation / 20) + 1;
+            const voteChange = value === 1 ? voteWeight : -voteWeight;
+            
+            design.votes += voteChange;
+            design.voters.push(currentUser.id);
+            
+            // Update user reputation
+            currentUser.reputation += value === 1 ? 5 : -2;
+            document.getElementById('userReputation').textContent = currentUser.reputation;
+            
+            // Save to storage
+            localStorage.setItem('chair_designs', JSON.stringify(designs));
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Check for evolution trigger
+            checkEvolutionTrigger();
+            
+            renderDesignsForVoting();
+            updateDashboard();
+            updateTimeline();
+            
+            showToast(`✅ Voted ${value === 1 ? 'for' : 'against'} ${design.name}! Reputation: ${currentUser.reputation}`);
+        }
+
+        // Evolution trigger - every 10 votes
+        function checkEvolutionTrigger() {
+            const totalVotes = designs.reduce((sum, d) => sum + d.votes, 0);
+            if (totalVotes > 0 && totalVotes % 10 === 0) {
+                evolveDesigns();
+            }
+        }
+
+        // Evolve designs based on votes
+        function evolveDesigns() {
+            const topDesigns = [...designs].sort((a, b) => b.votes - a.votes).slice(0, 2);
+            if (topDesigns.length < 2) return;
+            
+            const parent1 = topDesigns[0];
+            const parent2 = topDesigns[1];
+            
+            // Create evolved design through crossover
+            const evolvedDesign = {
+                id: 'design_' + Date.now(),
+                version: designs.length + 1,
+                name: `Evolved from ${parent1.name} & ${parent2.name}`,
+                creator: 'AI Evolution Engine',
+                creatorId: 'ai_evolution',
+                timestamp: new Date().toISOString(),
+                parameters: {
+                    chairType: Math.random() > 0.5 ? parent1.parameters.chairType : parent2.parameters.chairType,
+                    material: Math.random() > 0.5 ? parent1.parameters.material : parent2.parameters.material,
+                    color: Math.random() > 0.5 ? parent1.parameters.color : parent2.parameters.color,
+                    dimensions: {
+                        height: (parent1.parameters.dimensions.height + parent2.parameters.dimensions.height) / 2
+                    },
+                    ergonomics: {
+                        lumbarSupport: (parent1.parameters.ergonomics.lumbarSupport + parent2.parameters.ergonomics.lumbarSupport) / 2
+                    },
+                    sustainability: {
+                        recycledContent: (parent1.parameters.sustainability.recycledContent + parent2.parameters.sustainability.recycledContent) / 2
+                    }
+                },
+                votes: 0,
+                voters: [],
+                hash: generateHash(),
+                generation: Math.max(parent1.generation, parent2.generation) + 1,
+                parentHash: `${parent1.hash.slice(0, 8)}-${parent2.hash.slice(0, 8)}`
+            };
+            
+            designs.push(evolvedDesign);
+            localStorage.setItem('chair_designs', JSON.stringify(designs));
+            
+            showToast(`🧬 EVOLUTION! New design created from top performers! Generation ${evolvedDesign.generation}`);
+            updateTimeline();
+            renderDesignsForVoting();
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            document.getElementById('totalDesigns').textContent = designs.length;
+            document.getElementById('activeVoters').textContent = [...new Set(designs.flatMap(d => d.voters))].length;
+            
+            const avgErgo = designs.reduce((sum, d) => sum + d.parameters.ergonomics.lumbarSupport, 0) / designs.length;
+            document.getElementById('avgErgonomics').textContent = avgErgo.toFixed(1);
+            
+            const avgSustain = designs.reduce((sum, d) => sum + d.parameters.sustainability.recycledContent, 0) / designs.length;
+            document.getElementById('sustainabilityScore').textContent = Math.floor(avgSustain);
+            
+            // Update leaderboard
+            const contributors = {};
+            designs.forEach(design => {
+                contributors[design.creator] = (contributors[design.creator] || 0) + 1 + (design.votes / 10);
+            });
+            const sortedContributors = Object.entries(contributors).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            
+            const leaderboardHTML = sortedContributors.map(([name, score], i) => `
+                <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid rgba(0,0,0,0.1);">
+                    <span>${i + 1}. ${name}</span>
+                    <span style="font-weight: bold; color: #00b4db;">${Math.floor(score)} pts</span>
+                </div>
+            `).join('');
+            document.getElementById('leaderboard').innerHTML = leaderboardHTML || '<p>No contributors yet</p>';
+            
+            // Update chart
+            updateChart();
+        }
+
+        // Update evolution chart
+        function updateChart() {
+            const ctx = document.getElementById('evolutionChart').getContext('2d');
+            const generations = {};
+            designs.forEach(design => {
+                generations[design.generation] = (generations[design.generation] || 0) + 1;
+            });
+            
+            const labels = Object.keys(generations).sort((a,b) => a-b);
+            const data = labels.map(l => generations[l]);
+            
+            if (chart) chart.destroy();
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels.map(l => `Gen ${l}`),
+                    datasets: [{
+                        label: 'Designs per Generation',
+                        data: data,
+                        borderColor: '#00b4db',
+                        backgroundColor: 'rgba(0, 180, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#0083b0',
+                        pointBorderColor: '#fff',
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { 
+                            labels: { 
+                                color: document.body.classList.contains('dark-mode') ? 'white' : '#2c3e50',
+                                font: { family: 'Inter', size: 12 }
+                            } 
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: document.body.classList.contains('dark-mode') ? 'white' : '#2c3e50' },
+                            grid: { color: document.body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: document.body.classList.contains('dark-mode') ? 'white' : '#2c3e50' },
+                            grid: { color: document.body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update timeline
+        function updateTimeline() {
+            const container = document.getElementById('timelineContent');
+            const sortedDesigns = [...designs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            container.innerHTML = sortedDesigns.map(design => `
+                <div class="timeline-item">
+                    <div style="font-weight: bold; margin-bottom: 5px; color: #00b4db;">
+                        v${design.version} - ${design.name}
+                        ${design.parentHash ? `↳ Evolved from ${design.parentHash}` : '✨ Original Design'}
+                    </div>
+                    <div style="font-size: 12px; color: #666;">
+                        By ${design.creator} | Generation ${design.generation} | ${design.votes} votes
+                    </div>
+                    <div style="font-size: 12px; margin-top: 5px;">
+                        ${design.parameters.material} • Lumbar ${design.parameters.ergonomics.lumbarSupport}/10 • 
+                        Recycled ${design.parameters.sustainability.recycledContent}%
+                    </div>
+                    <div style="font-size: 10px; color: #888; margin-top: 5px;">
+                        Hash: ${design.hash} | ${new Date(design.timestamp).toLocaleString()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Export all designs
+        function exportDesigns() {
+            const data = {
+                exportedAt: new Date().toISOString(),
+                totalDesigns: designs.length,
+                designs: designs,
+                metadata: {
+                    totalVotes: designs.reduce((sum, d) => sum + d.votes, 0),
+                    generations: [...new Set(designs.map(d => d.generation))].length
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `self-evolving-chair-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('📁 Designs exported successfully!');
+        }
+
+        // Load user data
+        function loadUserData() {
+            const stored = localStorage.getItem('currentUser');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+            } else {
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            document.getElementById('userReputation').textContent = currentUser.reputation;
+        }
+
+        // Auto evolution every 30 seconds (for demo)
+        function startAutoEvolution() {
+            setInterval(() => {
+                if (designs.length > 3 && Math.random() > 0.8) {
+                    evolveDesigns();
+                }
+            }, 30000);
+        }
+
+        // Initialize
+        function init() {
+            loadUserData();
+            loadDesigns();
+            updatePreview();
+            updateDashboard();
+            updateTimeline();
+            setupRealTimeUpdates();
+            startAutoEvolution();
+            
+            // Set up event listeners for real-time parameter updates
+            document.getElementById('height').addEventListener('input', updatePreview);
+            document.getElementById('lumbar').addEventListener('input', updatePreview);
+            document.getElementById('recycled').addEventListener('input', updatePreview);
+        }
+
+        // Start the application
+        init();
+    </script>
+</body>
+</html>
