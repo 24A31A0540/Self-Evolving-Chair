@@ -1,103 +1,42 @@
-# Adaptive Learning Lamp for Night Study 💡
+# Self Revolving Chair
 
-## 📌 Project Overview
-
-The **Adaptive Learning Lamp** is a smart product concept designed to improve night study conditions by automatically adjusting lighting based on user needs.
-This project demonstrates a **digital prototype system** that simulates adaptive design using user inputs, feedback, and evolution logic.
-
----
+## 📌 Project Description
+The Self Revolving Chair is an innovative seating solution designed to rotate automatically without manual effort. It uses a simple mechanism to provide smooth and continuous rotation, improving comfort and usability.
 
 ## 🎯 Objective
+To design and develop a chair that can rotate on its own, reducing manual effort and providing ease of movement for users.
 
-* Reduce eye strain during night study
-* Improve concentration and productivity
-* Provide personalized lighting experience
+## ⚙️ Features
+- Automatic rotation mechanism  
+- Smooth and stable movement  
+- Comfortable seating design  
+- Low maintenance  
+- User-friendly and efficient  
 
----
+## 🛠️ Components Used
+- DC Motor / Rotating Mechanism  
+- Power Supply / Battery  
+- Base Frame  
+- Chair Seat  
+- Control Switch (optional)  
 
-## 💡 Product Strategy
+## 🔧 Working Principle
+The chair works using a motor-based rotating system. When the power supply is turned on, the motor rotates the base of the chair, causing it to revolve smoothly. The speed can be controlled depending on the motor used.
 
-The product focuses on:
+## 💡 Applications
+- Office environments  
+- Study rooms  
+- Relaxation and smart furniture systems  
+- Innovation and engineering projects  
 
-* User-centered design
-* Smart adaptability
-* Energy efficiency
-* Affordable and scalable solution
+## 🚀 Future Enhancements
+- Speed control feature  
+- Remote control operation  
+- Sensor-based automatic rotation  
+- Rechargeable battery system  
 
----
+## 👩‍💻 Author
+Yedlapalli Sai Vijaya Durga
 
-## ⭐ Product Value
-
-* Enhances student learning efficiency
-* Prevents eye fatigue
-* Improves study environment
-* Supports long-duration study sessions
-
----
-
-## ⚙️ Product Specifications
-
-* Adjustable brightness levels
-* Adaptive user feedback system
-* Smart design evolution (based on usage)
-* Energy-efficient model
-* User-friendly interface
-
----
-
-## 🧪 Prototype Description
-
-This project uses a **web-based simulation**:
-
-* Interactive design system
-* Real-time parameter adjustments
-* Visualization of product behavior
-* Community feedback and evolution model
-
----
-
-## 🛠️ Technologies Used
-
-* HTML
-* CSS
-* JavaScript
-* Chart.js
-
----
-
-## 🚀 Features
-
-* Interactive UI dashboard
-* Design customization
-* Real-time updates
-* Feedback and voting system
-* Evolution-based design simulation
-
----
-
-## 🌐 Live Demo
-
-https://github.com/24A31A0540/adaptive-learning-lamp/
-
----
-
-## ▶️ How to Run
-
-1. Download or clone the repository
-2. Open `index.html` in any browser
-3. Interact with the system
-
----
-
-## 🔮 Future Enhancements
-
-* AI-based brightness adjustment
-* Sensor integration (light/eye tracking)
-* Mobile app support
-* Voice control system
-
----
-
-## 👨‍💻 Author
-
-**Yedlapalli Sai Vijaya Durga**
+## 📄 License
+This project is for educational purposes.
